@@ -1,221 +1,227 @@
-from ortools.sat.python import cp_model
+import os
 import pandas as pd
 import random
-import matplotlib.pyplot as plt
-import os
+from ortools.sat.python import cp_model
 
-# =====================================================
-# CONFIGURATION
-GROUPS = ["P", "Q", "R", "S"]
-NUM_CHOICES_PER_RECORD = 4
+# -----------------------------
+# CONFIG
+# -----------------------------
+GROUPS = ["A", "B", "C", "D"]
 
-DUMMY_SUBJECTS = [
-    "Geography", "Art", "RS", "History", "French", "Spanish", "German",
-    "DT", "Food", "Business", "PE", "Computing", "Music", "Drama"
-]
+# -----------------------------
+# LOAD CONSTRAINT FILES
+# -----------------------------
+def load_max_students_per_set():
+    if os.path.exists("max_students_per_set.csv"):
+        df = pd.read_csv("max_students_per_set.csv")
+        df.columns = df.columns.str.strip()
+        return dict(zip(df["Subject"], df["MaxStudents"]))
+    return {}
 
-# =====================================================
-# DATA FUNCTIONS
-def generate_dummy_records(num_records):
-    return {
-        f"R{i+1}": random.sample(DUMMY_SUBJECTS, NUM_CHOICES_PER_RECORD)
-        for i in range(num_records)
-    }
+def load_max_sets_per_subject():
+    if os.path.exists("max_sets_per_subject.csv"):
+        df = pd.read_csv("max_sets_per_subject.csv")
+        df.columns = df.columns.str.strip()
+        return dict(zip(df["Subject"], df["MaxSets"]))
+    return {}
 
-def load_records_from_csv(file_path):
-    df = pd.read_csv(file_path)
-    records = {
-        row["Record"]: [row["Choice1"], row["Choice2"], row["Choice3"], row["Choice4"]]
-        for _, row in df.iterrows()
-    }
-    return records
+# -----------------------------
+# DUMMY DATA
+# -----------------------------
+def generate_dummy_data(n):
+    subjects = ["DT", "Food", "Art", "Business", "History", "Geography"]
+    records = []
+    for i in range(n):
+        num_choices = random.choice([3, 4])
+        choices = random.sample(subjects, num_choices)
+        record = {"Student": f"Student_{i+1}"}
+        for idx, group in enumerate(GROUPS):
+            if idx < num_choices:
+                record[group] = choices[idx]
+            else:
+                record[group] = ""
+        records.append(record)
+    return pd.DataFrame(records)
 
-def load_constraints_csv(file_path, column_name):
-    """
-    Returns a dictionary of {Subject: value} for the specified column.
-    """
-    df = pd.read_csv(file_path)
-    constraints = {}
-    for _, row in df.iterrows():
-        subject = row['Subject']
-        if column_name in row and not pd.isna(row[column_name]):
-            constraints[subject] = int(row[column_name])
-    return constraints
-
-# =====================================================
+# -----------------------------
 # SOLVER
-def solve_min_sets(records, groups, subject_limits=None, max_students_per_set=None, max_students_subject=None):
+# -----------------------------
+def solve(records, subject_max_sets, subject_max_size, default_max_set_size):
     model = cp_model.CpModel()
-    record_names = list(records.keys())
-    all_subjects = sorted({s for choices in records.values() for s in choices})
+    students = records["Student"].tolist()
 
-    # VARIABLES
+    # build student choices
+    student_choices = {}
+    subjects = set()
+    for _, row in records.iterrows():
+        s = row["Student"]
+        choices = []
+        for g in GROUPS:
+            if pd.notna(row[g]) and row[g] != "":
+                choices.append(row[g])
+                subjects.add(row[g])
+        student_choices[s] = choices
+    subjects = list(subjects)
+
+    # max sets per subject
+    max_sets = {}
+    for subj in subjects:
+        if subj in subject_max_sets:
+            max_sets[subj] = subject_max_sets[subj]
+        else:
+            # minimal number of sets to fit students with general max
+            max_sets[subj] = (len([s for s in students if subj in student_choices[s]]) // default_max_set_size) + 1
+
     x = {}
-    for r in record_names:
-        for g in groups:
-            for s in all_subjects:
-                x[r,g,s] = model.NewBoolVar(f"x_{r}_{g}_{s}")
-
     y = {}
-    for g in groups:
-        for s in all_subjects:
-            y[g,s] = model.NewBoolVar(f"y_{g}_{s}")
+    for s in students:
+        for subj in student_choices[s]:
+            for k in range(max_sets[subj]):
+                x[(s, subj, k)] = model.NewBoolVar(f"x_{s}_{subj}_{k}")
+    for subj in subjects:
+        for k in range(max_sets[subj]):
+            y[(subj, k)] = model.NewBoolVar(f"y_{subj}_{k}")
 
-    # CONSTRAINTS
-    for r in record_names:
-        for g in groups:
-            model.Add(sum(x[r,g,s] for s in records[r]) == 1)
-            for s in all_subjects:
-                if s not in records[r]:
-                    model.Add(x[r,g,s] == 0)
+    # Each student assigned to number of choices they have
+    for s in students:
+        total_choices = len(student_choices[s])
+        model.Add(
+            sum(x[(s, subj, k)] for subj in student_choices[s] for k in range(max_sets[subj])) == total_choices
+        )
 
-    for g in groups:
-        for s in all_subjects:
-            model.AddMaxEquality(y[g,s], [x[r,g,s] for r in record_names])
+    # Link assignments to active set
+    for s in students:
+        for subj in student_choices[s]:
+            for k in range(max_sets[subj]):
+                model.Add(x[(s, subj, k)] <= y[(subj, k)])
 
-    # Subject max sets
-    if subject_limits:
-        for sub, max_sets in subject_limits.items():
-            if sub in all_subjects:
-                model.Add(sum(y[g,sub] for g in groups) <= max_sets)
+    # Max students per set enforced strictly
+    for subj in subjects:
+        limit = subject_max_size.get(subj, default_max_set_size)
+        for k in range(max_sets[subj]):
+            model.Add(
+                sum(x[(s, subj, k)] for s in students if subj in student_choices[s]) <= limit * y[(subj, k)]
+            )
 
-    # Maximum students per set (overall)
-    if max_students_per_set:
-        for g in groups:
-            for s in all_subjects:
-                model.Add(sum(x[r,g,s] for r in record_names) <= max_students_per_set)
-
-    # Maximum students per subject (specific)
-    if max_students_subject:
-        for g in groups:
-            for s, limit in max_students_subject.items():
-                if s in all_subjects:
-                    model.Add(sum(x[r,g,s] for r in record_names) <= limit)
-
-    # OBJECTIVE
-    model.Minimize(sum(y[g,s] for g in groups for s in all_subjects))
+    # Objective: minimize total sets used
+    model.Minimize(sum(y.values()))
 
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 300
+    solver.parameters.max_time_in_seconds = 60
     status = solver.Solve(model)
-    if status not in [cp_model.OPTIMAL, cp_model.FEASIBLE]:
-        raise ValueError("No feasible solution found with the given constraints.")
 
-    # Build outputs
-    assignment_map = {}
-    groups_map = {g: set() for g in groups}
-    group_subject_usage = {g:{} for g in groups}
-    for r in record_names:
-        assignment_map[r] = {}
-        for g in groups:
-            for s in records[r]:
-                if solver.BooleanValue(x[r,g,s]):
-                    assignment_map[r][g] = s
-                    groups_map[g].add(s)
-                    group_subject_usage[g][s] = group_subject_usage[g].get(s,0)+1
-    return assignment_map, groups_map, group_subject_usage
+    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+        return None, None
+    return solver, (x, y)
 
-# =====================================================
-# REPORTING
-def print_sets_summary(groups_map, group_subject_usage, viability_threshold):
-    print("\nDistinct sets in each group with sizes:\n")
-    all_sets = []
-    for g in GROUPS:
-        subjects_sorted = sorted(groups_map[g])
-        print(f"Group {g} ({len(subjects_sorted)} sets):")
-        for s in subjects_sorted:
-            size = group_subject_usage[g][s]
-            flag = " ⚠ BELOW VIABILITY" if size < viability_threshold else ""
-            print(f"  - {s}: {size} students{flag}")
-            all_sets.append((g, s, size))
-        print()
-    ranked = sorted(all_sets, key=lambda x: x[2], reverse=True)
-    print("\nAll sets ranked largest to smallest:\n")
-    for g, s, size in ranked:
-        print(f"{g} - {s}: {size}")
-    return ranked
+# -----------------------------
+# EXPORT RESULTS
+# -----------------------------
+def export_results(records, solver, x, y):
+    students = records["Student"].tolist()
+    student_rows = []
+    set_rows = []
+    subject_set_count = {}
+    group_sets_rows = []
 
-def save_outputs(assignment_map, groups_map, group_subject_usage, ranked_sets):
-    pd.DataFrame(assignment_map).T.to_csv("optimal_assignment.csv")
-    sets_data = []
-    for g in GROUPS:
-        for s in sorted(groups_map[g]):
-            sets_data.append({"Group": g, "Subject": s, "Size": group_subject_usage[g][s]})
-    pd.DataFrame(sets_data).to_csv("distinct_sets_summary.csv", index=False)
-    pd.DataFrame(ranked_sets, columns=["Group","Subject","Size"]).to_csv("ranked_sets.csv", index=False)
-    print("\nSaved:")
-    print(" - optimal_assignment.csv")
-    print(" - distinct_sets_summary.csv")
-    print(" - ranked_sets.csv")
+    for (subj, k), var in y.items():
+        if solver.Value(var) == 1:
+            subject_set_count[subj] = subject_set_count.get(subj, 0) + 1
+            students_in_set = []
+            groups_in_set = []
+            for (s, sj, kk), xv in x.items():
+                if sj == subj and kk == k and solver.Value(xv) == 1:
+                    students_in_set.append(str(s))
+                    student_rows.append({"Student": s, "Subject": subj, "SetNumber": k})
+                    # determine which group this student assigned
+                    row = records[records["Student"] == s].iloc[0]
+                    for g in GROUPS:
+                        if row[g] == subj:
+                            groups_in_set.append(g)
+                            break
+            set_rows.append({
+                "Subject": subj,
+                "SetNumber": k,
+                "Students": ", ".join(students_in_set),
+                "SetSize": len(students_in_set)
+            })
+            group_sets_rows.append({
+                "Subject": subj,
+                "SetNumber": k,
+                "Groups": ", ".join(sorted(set(groups_in_set)))
+            })
 
-def visualize(group_subject_usage):
-    plt.figure(figsize=(14,6))
-    for g in GROUPS:
-        subjects = sorted(group_subject_usage[g].keys())
-        counts = [group_subject_usage[g][s] for s in subjects]
-        plt.bar([f"{s}_{g}" for s in subjects], counts, label=g)
-    plt.xticks(rotation=90)
-    plt.title("Set Sizes per Group")
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
+    # write CSVs
+    pd.DataFrame(student_rows).to_csv("student_assignments.csv", index=False)
+    pd.DataFrame(set_rows).to_csv("sets_detail.csv", index=False)
+    pd.DataFrame(group_sets_rows).to_csv("group_sets.csv", index=False)
 
-# =====================================================
+    summary_rows = []
+    total_sets = 0
+    for subj, count in subject_set_count.items():
+        summary_rows.append({"Subject": subj, "NumberOfSets": count})
+        total_sets += count
+    pd.DataFrame(summary_rows).to_csv("set_summary.csv", index=False)
+
+    print("\n--- SUMMARY ---")
+    print(f"Total Sets: {total_sets}")
+    for subj, count in subject_set_count.items():
+        print(f"{subj}: {count} sets")
+    print("\nFiles written: student_assignments.csv, sets_detail.csv, set_summary.csv, group_sets.csv")
+
+# -----------------------------
 # MAIN
+# -----------------------------
 def main():
-    print("Choose data source:")
-    print("1 - Dummy data")
-    print("2 - CSV file")
-    choice = input("Enter 1 or 2: ").strip()
+    # ask user for general max set size
+    default_max_set_size = int(input("Enter general maximum students per set (default 24): ") or 24)
 
-    records = {}
-    subject_limits = None
-    max_students_subject = None
-    max_students_per_set = None
-
-    if choice == "1":
-        num_records_input = input("Enter number of dummy records to generate: ").strip()
-        num_records = int(num_records_input)
-        records = generate_dummy_records(num_records)
-        print(f"\nGenerated {len(records)} dummy records.")
-    elif choice == "2":
-        records_path = input("Enter records CSV path: ").strip()
-        records = load_records_from_csv(records_path)
-        print(f"\nLoaded {len(records)} records.")
+    use_dummy = input("Use dummy data? (y/n): ").lower()
+    if use_dummy == "y":
+        n = int(input("How many dummy students? "))
+        records = generate_dummy_data(n)
+        records.to_csv("dummy_data.csv", index=False)
+        print("Dummy data written to dummy_data.csv")
     else:
-        print("Invalid choice.")
+        filename = input("Enter CSV filename: ")
+        records = pd.read_csv(filename)
+
+    # clean headers
+    records.columns = records.columns.str.strip()
+    if len(records.columns) < 4:
+        raise ValueError("CSV must contain at least 1 student column and 3 choice columns.")
+
+    # Student column
+    student_col = records.columns[0]
+    records = records.rename(columns={student_col: "Student"})
+    records["Student"] = records["Student"].astype(str)
+
+    # Choice columns
+    choice_columns = records.columns[1:]
+    choice_columns = choice_columns[:4]
+    rename_map = {col: GROUPS[idx] for idx, col in enumerate(choice_columns)}
+    records = records.rename(columns=rename_map)
+    if "D" not in records.columns:
+        records["D"] = ""
+
+    print("\nUsing columns:")
+    print(records[["Student", "A", "B", "C", "D"]].head())
+
+    subject_max_size = load_max_students_per_set()
+    subject_max_sets = load_max_sets_per_subject()
+    print("\nLoaded constraints:")
+    print("Max students per set:", subject_max_size)
+    print("Max sets per subject:", subject_max_sets)
+
+    print("\nAttempting STRICT solve...")
+    solver, vars_tuple = solve(records, subject_max_sets, subject_max_size, default_max_set_size)
+    if solver is None:
+        print("⚠ No feasible solution found.")
         return
 
-    # =====================================================
-    # Automatically load constraints if files exist
-    if os.path.exists("max_students_per_set.csv"):
-        max_students_subject = load_constraints_csv("max_students_per_set.csv", "MaxStudents")
-        print("Loaded maximum students per subject from max_students_per_set.csv:", max_students_subject)
+    x, y = vars_tuple
+    print("\nSolution found.")
+    export_results(records, solver, x, y)
 
-    if os.path.exists("max_sets_per_subject.csv"):
-        subject_limits = load_constraints_csv("max_sets_per_subject.csv", "MaxSets")
-        print("Loaded maximum sets per subject from max_sets_per_subject.csv:", subject_limits)
-
-    # Optional overall max students per set
-    overall_limit_input = input("\nEnter maximum students per set (overall, press Enter to skip): ").strip()
-    if overall_limit_input:
-        max_students_per_set = int(overall_limit_input)
-
-    viability_threshold = int(input("\nEnter minimum viable class size (e.g. 10): "))
-
-    print("\nSolving optimal assignment...")
-    assignment_map, groups_map, group_subject_usage = solve_min_sets(
-        records, GROUPS, subject_limits, max_students_per_set, max_students_subject
-    )
-
-    sets_per_group = {g: len(groups_map[g]) for g in GROUPS}
-    total_sets = sum(sets_per_group.values())
-    print("\nSets per group:", sets_per_group)
-    print("Total sets:", total_sets)
-
-    ranked_sets = print_sets_summary(groups_map, group_subject_usage, viability_threshold)
-    save_outputs(assignment_map, groups_map, group_subject_usage, ranked_sets)
-    visualize(group_subject_usage)
-
-if __name__=="__main__":
+if __name__ == "__main__":
     main()

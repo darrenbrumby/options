@@ -1,0 +1,297 @@
+Student,Subject,SetNumber
+3,History,0
+4,History,0
+5,History,0
+7,History,0
+9,History,0
+15,History,0
+18,History,0
+23,History,0
+34,History,0
+37,History,0
+39,History,0
+41,History,0
+42,History,0
+43,History,0
+45,History,0
+49,History,0
+65,History,0
+68,History,0
+69,History,0
+71,History,0
+73,History,0
+74,History,0
+75,History,0
+3,History,1
+4,History,1
+5,History,1
+7,History,1
+18,History,1
+19,History,1
+20,History,1
+23,History,1
+24,History,1
+27,History,1
+34,History,1
+37,History,1
+39,History,1
+41,History,1
+43,History,1
+45,History,1
+48,History,1
+49,History,1
+65,History,1
+70,History,1
+71,History,1
+73,History,1
+74,History,1
+36,Music ,1
+55,Music ,1
+65,Music ,1
+7,Psychology ,74
+8,Psychology ,74
+13,Psychology ,74
+17,Psychology ,74
+25,Psychology ,74
+28,Psychology ,74
+30,Psychology ,74
+31,Psychology ,74
+33,Psychology ,74
+35,Psychology ,74
+38,Psychology ,74
+58,Psychology ,74
+75,Psychology ,74
+1,Drama,74
+2,Drama,74
+5,Drama,74
+7,Drama,74
+10,Drama,74
+15,Drama,74
+18,Drama,74
+26,Drama,74
+45,Drama,74
+54,Drama,74
+63,Drama,74
+70,Drama,74
+3,Food & Nutrition ,17
+17,Food & Nutrition ,17
+25,Food & Nutrition ,17
+27,Food & Nutrition ,17
+29,Food & Nutrition ,17
+31,Food & Nutrition ,17
+35,Food & Nutrition ,17
+40,Food & Nutrition ,17
+43,Food & Nutrition ,17
+51,Food & Nutrition ,17
+58,Food & Nutrition ,17
+59,Food & Nutrition ,17
+60,Food & Nutrition ,17
+63,Food & Nutrition ,17
+3,Business ,0
+11,Business ,0
+14,Business ,0
+17,Business ,0
+22,Business ,0
+24,Business ,0
+26,Business ,0
+28,Business ,0
+38,Business ,0
+39,Business ,0
+42,Business ,0
+43,Business ,0
+50,Business ,0
+51,Business ,0
+54,Business ,0
+60,Business ,0
+61,Business ,0
+62,Business ,0
+64,Business ,0
+66,Business ,0
+68,Business ,0
+69,Business ,0
+72,Business ,0
+1,RS: Philosophy and Ethics ,41
+2,RS: Philosophy and Ethics ,41
+8,RS: Philosophy and Ethics ,41
+12,RS: Philosophy and Ethics ,41
+15,RS: Philosophy and Ethics ,41
+19,RS: Philosophy and Ethics ,41
+20,RS: Philosophy and Ethics ,41
+24,RS: Philosophy and Ethics ,41
+29,RS: Philosophy and Ethics ,41
+33,RS: Philosophy and Ethics ,41
+35,RS: Philosophy and Ethics ,41
+37,RS: Philosophy and Ethics ,41
+41,RS: Philosophy and Ethics ,41
+47,RS: Philosophy and Ethics ,41
+48,RS: Philosophy and Ethics ,41
+52,RS: Philosophy and Ethics ,41
+53,RS: Philosophy and Ethics ,41
+57,RS: Philosophy and Ethics ,41
+58,RS: Philosophy and Ethics ,41
+67,RS: Philosophy and Ethics ,41
+70,RS: Philosophy and Ethics ,41
+72,RS: Philosophy and Ethics ,41
+75,RS: Philosophy and Ethics ,41
+1,RS: Philosophy and Ethics ,54
+2,RS: Philosophy and Ethics ,54
+8,RS: Philosophy and Ethics ,54
+12,RS: Philosophy and Ethics ,54
+15,RS: Philosophy and Ethics ,54
+19,RS: Philosophy and Ethics ,54
+20,RS: Philosophy and Ethics ,54
+24,RS: Philosophy and Ethics ,54
+29,RS: Philosophy and Ethics ,54
+33,RS: Philosophy and Ethics ,54
+35,RS: Philosophy and Ethics ,54
+37,RS: Philosophy and Ethics ,54
+41,RS: Philosophy and Ethics ,54
+46,RS: Philosophy and Ethics ,54
+47,RS: Philosophy and Ethics ,54
+48,RS: Philosophy and Ethics ,54
+52,RS: Philosophy and Ethics ,54
+53,RS: Philosophy and Ethics ,54
+57,RS: Philosophy and Ethics ,54
+58,RS: Philosophy and Ethics ,54
+67,RS: Philosophy and Ethics ,54
+70,RS: Philosophy and Ethics ,54
+75,RS: Philosophy and Ethics ,54
+1,Art,0
+2,Art,0
+5,Art,0
+12,Art,0
+14,Art,0
+18,Art,0
+19,Art,0
+20,Art,0
+32,Art,0
+33,Art,0
+44,Art,0
+47,Art,0
+48,Art,0
+54,Art,0
+67,Art,0
+73,Art,0
+6,Computer Science ,0
+9,Computer Science ,0
+11,Computer Science ,0
+16,Computer Science ,0
+21,Computer Science ,0
+22,Computer Science ,0
+45,Computer Science ,0
+50,Computer Science ,0
+53,Computer Science ,0
+55,Computer Science ,0
+61,Computer Science ,0
+62,Computer Science ,0
+67,Computer Science ,0
+71,Computer Science ,0
+74,Computer Science ,0
+16,Physical Education ,3
+23,Physical Education ,3
+26,Physical Education ,3
+27,Physical Education ,3
+28,Physical Education ,3
+30,Physical Education ,3
+31,Physical Education ,3
+38,Physical Education ,3
+40,Physical Education ,3
+42,Physical Education ,3
+44,Physical Education ,3
+46,Physical Education ,3
+49,Physical Education ,3
+51,Physical Education ,3
+56,Physical Education ,3
+57,Physical Education ,3
+59,Physical Education ,3
+64,Physical Education ,3
+66,Physical Education ,3
+68,Physical Education ,3
+69,Physical Education ,3
+16,Physical Education ,4
+23,Physical Education ,4
+26,Physical Education ,4
+27,Physical Education ,4
+28,Physical Education ,4
+30,Physical Education ,4
+31,Physical Education ,4
+38,Physical Education ,4
+40,Physical Education ,4
+42,Physical Education ,4
+44,Physical Education ,4
+49,Physical Education ,4
+51,Physical Education ,4
+56,Physical Education ,4
+57,Physical Education ,4
+59,Physical Education ,4
+60,Physical Education ,4
+64,Physical Education ,4
+66,Physical Education ,4
+68,Physical Education ,4
+69,Physical Education ,4
+4,Triple Science,19
+6,Triple Science,19
+9,Triple Science,19
+10,Triple Science,19
+11,Triple Science,19
+13,Triple Science,19
+14,Triple Science,19
+16,Triple Science,19
+21,Triple Science,19
+22,Triple Science,19
+25,Triple Science,19
+32,Triple Science,19
+34,Triple Science,19
+36,Triple Science,19
+50,Triple Science,19
+52,Triple Science,19
+55,Triple Science,19
+61,Triple Science,19
+62,Triple Science,19
+63,Triple Science,19
+64,Triple Science,19
+72,Triple Science,19
+73,Triple Science,19
+4,Triple Science,46
+6,Triple Science,46
+9,Triple Science,46
+10,Triple Science,46
+11,Triple Science,46
+13,Triple Science,46
+14,Triple Science,46
+22,Triple Science,46
+25,Triple Science,46
+29,Triple Science,46
+32,Triple Science,46
+34,Triple Science,46
+36,Triple Science,46
+50,Triple Science,46
+55,Triple Science,46
+56,Triple Science,46
+61,Triple Science,46
+62,Triple Science,46
+63,Triple Science,46
+66,Triple Science,46
+71,Triple Science,46
+72,Triple Science,46
+74,Triple Science,46
+6,Geography,0
+8,Geography,0
+10,Geography,0
+12,Geography,0
+13,Geography,0
+17,Geography,0
+30,Geography,0
+32,Geography,0
+36,Geography,0
+39,Geography,0
+40,Geography,0
+44,Geography,0
+47,Geography,0
+52,Geography,0
+53,Geography,0
+54,Geography,0
+56,Geography,0
+59,Geography,0
+60,Geography,0
+65,Geography,0
